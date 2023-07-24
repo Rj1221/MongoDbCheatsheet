@@ -489,7 +489,9 @@ db.products.find({ name: { $regex: /^Laptop/ } })
 ```
 # Conclusion
 In conclusion, this MongoDB cheat sheet provides a comprehensive guide to essential commands and operations for efficiently working with MongoDB databases. It covers basic commands for managing databases and collections, as well as querying techniques to retrieve specific data. Additionally, it introduces aggregation for complex data processing and analysis.
-
 You also learned about updating and deleting data, using query operators and regular expressions for precise filtering, and optimizing query performance with indexes. While this cheat sheet covers a wide range of topics, there are still more advanced features to explore in MongoDB.
-
 By continuously practicing and referring to the official documentation, you can enhance your MongoDB skills and unlock exciting possibilities for building powerful applications. Happy coding with MongoDB!
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
