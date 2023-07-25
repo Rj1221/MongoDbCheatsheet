@@ -160,7 +160,10 @@ db.<collection_name>.find({ key: value })
 ```javascript
 db.products.find({ price: { $lt: 100 } })
 ```
-
+To show all the documents in collection at once with pretty() method which is used to prettify documents
+```javascript
+db.products.find().pretty()
+```
 ### findOne()
 To retrieve a single document that matches a specific query criteria:
 ```javascript
