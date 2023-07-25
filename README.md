@@ -1,7 +1,8 @@
 # MongoDB Cheat Sheet with Examples
 
-This README file provides a comprehensive guide to MongoDB commands and operations. MongoDB is a popular NoSQL database that stores data in a JSON-like format, making it easy to work with and flexible. This cheat sheet covers basic commands, database and collection creation, data insertion, querying, updates, and some advanced operations. Let's get started!
+This README file provides a comprehensive guide to MongoDB commands and operations. MongoDB is a popular NoSQL database that stores data in a JSON-like format, making it easy to work with and flexible. This cheat sheet covers basic commands, database and collection creation, data insertion, querying, updates, deletions, and some advanced operations. Let's get started!
 ![MongoDB Logo](https://miro.medium.com/v2/resize:fit:512/1*doAg1_fMQKWFoub-6gwUiQ.png)
+
 ## Table of Contents
 1. [Basic Commands](#basic-commands)
    - Show Databases
@@ -40,19 +41,22 @@ This README file provides a comprehensive guide to MongoDB commands and operatio
    - findOne and Update()
    - updateOne()
    - updateMany()
-   - remove()
 
-8. [Extras](#extras)
+8. [Deletion Commands](#deletion-commands)
+   - deleteOne()
+   - deleteMany()
+
+9. [Extras](#extras)
    - skip()
    - sort()
    - createIndex()
    - dropIndex()
    - dropIndexes()
 
-9. [Aggregation](#aggregation)
-   - aggregation()
+10. [Aggregation](#aggregation)
+    - aggregation()
 
-10. [Aggregation Expressions](#aggregation-expressions)
+11. [Aggregation Expressions](#aggregation-expressions)
     - sum
     - avg
     - min
@@ -61,7 +65,7 @@ This README file provides a comprehensive guide to MongoDB commands and operatio
     - addToSet
     - first
 
-11. [Regular Expressions](#regular-expressions)
+12. [Regular Expressions](#regular-expressions)
 
 ## Basic Commands
 
@@ -247,6 +251,8 @@ db.<collection_name>.find({ $and: [ { key1: value1 }, { key2: value2 }, ... ] })
 **Example:**
 ```javascript
 db.products.find({ $and: [ { category: "Electronics" }, { price: { $lt: 1000 } } ] })
+
+
 ```
 
 ### OR
@@ -264,9 +270,7 @@ db.<collection_name>.find({ $and: [ { key1: value1 }, { $or: [ { key2: value2 },
 ```
 **Example:**
 ```javascript
-db.products.find
-
-({ $and: [ { category: "Electronics" }, { $or: [ { price: { $lt: 500 } }, { stock: { $gte: 50 } } ] } ] })
+db.products.find({ $and: [ { category: "Electronics" }, { $or: [ { price: { $lt: 500 } }, { stock: { $gte: 50 } } ] } ] })
 ```
 
 ### NOR
@@ -328,6 +332,7 @@ db.<collection_name>.updateOne({ key: value }, { $set: { new_key: new_value } })
 ```javascript
 db.products.updateOne({ name: "Monitor" }, { $set: { stock: 15 } })
 ```
+
 ### updateMany()
 `updateMany()` is a MongoDB method used to update multiple documents that match a specified filter in a collection. It allows you to make changes to multiple records in a single database operation, which can be more efficient than updating each document individually.
 The syntax for `updateMany()` in MongoDB is as follows:
@@ -376,14 +381,27 @@ const update = { $mul: { salary: 1.1 } };
 const result = db.employees.updateMany(filter, update);
 // Output: The "salary" field of all employees in the "IT" department is increased by 10%.
 ```
-### remove()
-To delete documents that match a specific query:
+
+## Deletion Commands
+
+### deleteOne()
+To delete a single document that matches a specific query:
 ```javascript
-db.<collection_name>.remove({ key: value })
+db.<collection_name>.deleteOne({ key: value })
 ```
 **Example:**
 ```javascript
-db.products.remove({ stock: { $lt: 10 } })
+db.products.deleteOne({ stock: { $lt: 10 } })
+```
+
+### deleteMany()
+To delete all documents that match a specific query:
+```javascript
+db.<collection_name>.deleteMany({ key: value })
+```
+**Example:**
+```javascript
+db.products.deleteMany({ category: "Electronics" })
 ```
 
 ## Extras
@@ -416,7 +434,9 @@ db.<collection_name>.createIndex({ field: 1 })  // 1 for ascending, -1 for desce
 **Example:**
 ```javascript
 db.products.createIndex({ name: 1 })  // Create an index on the "name" field
-```
+``
+
+`
 
 ### dropIndex()
 To remove a specific index from a collection:
@@ -527,9 +547,7 @@ db.products.find().limit(1)
 
 ## Regular Expressions
 
-MongoDB supports regular expressions for pattern matching in queries. You can use the `$regex` operator to perform regular
-
- expression queries.
+MongoDB supports regular expressions for pattern matching in queries. You can use the `$regex` operator to perform regular expression queries.
 
 ```javascript
 db.<collection_name>.find({ field: { $regex: /pattern/ } })
@@ -538,10 +556,10 @@ db.<collection_name>.find({ field: { $regex: /pattern/ } })
 ```javascript
 db.products.find({ name: { $regex: /^Laptop/ } })
 ```
+
 # Conclusion
-In conclusion, this MongoDB cheat sheet provides a comprehensive guide to essential commands and operations for efficiently working with MongoDB databases. It covers basic commands for managing databases and collections, as well as querying techniques to retrieve specific data. Additionally, it introduces aggregation for complex data processing and analysis.
-You also learned about updating and deleting data, using query operators and regular expressions for precise filtering, and optimizing query performance with indexes. While this cheat sheet covers a wide range of topics, there are still more advanced features to explore in MongoDB.
-By continuously practicing and referring to the official documentation, you can enhance your MongoDB skills and unlock exciting possibilities for building powerful applications. Happy coding with MongoDB!
+In conclusion, this MongoDB cheat sheet provides a comprehensive guide to essential commands and operations for efficiently working with MongoDB databases. It covers basic commands for managing databases and collections, as well as querying techniques to retrieve specific data. Additionally, it introduces aggregation for complex data processing and analysis. You also learned about updating and deleting data, using query operators and regular expressions for precise filtering, and optimizing query performance with indexes.
+While this cheat sheet covers a wide range of topics, there are still more advanced features to explore in MongoDB. By continuously practicing and referring to the official documentation, you can enhance your MongoDB skills and unlock exciting possibilities for building powerful applications. Happy coding with MongoDB!
 
 ## License
 
