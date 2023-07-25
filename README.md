@@ -39,6 +39,7 @@ This README file provides a comprehensive guide to MongoDB commands and operatio
    - save()
    - findOne and Update()
    - updateOne()
+   - updateMany()
    - remove()
 
 8. [Extras](#extras)
@@ -327,7 +328,54 @@ db.<collection_name>.updateOne({ key: value }, { $set: { new_key: new_value } })
 ```javascript
 db.products.updateOne({ name: "Monitor" }, { $set: { stock: 15 } })
 ```
-
+### updateMany()
+`updateMany()` is a MongoDB method used to update multiple documents that match a specified filter in a collection. It allows you to make changes to multiple records in a single database operation, which can be more efficient than updating each document individually.
+The syntax for `updateMany()` in MongoDB is as follows:
+```javascript
+db.<collection_name>.updateMany({ key: value }, { $set: { new_key: new_value } })
+```
+**Advance Syntax:**
+```javascript
+db.collection.updateMany(
+   <filter>,
+   <update>,
+   {
+      upsert: <boolean>,
+      collation: <document>,
+      arrayFilters: [ <filterdocument1>, ... ],
+      hint: <document|string>
+   }
+)
+```
+**Parameters:**
+- `collection`: The name of the collection where the documents will be updated.
+- `<filter>`: A document that specifies the selection criteria to identify the documents to be updated.
+- `<update>`: A document that contains the modifications to be applied to the matching documents.
+- `upsert`: (Optional) If set to `true`, creates a new document if no documents match the filter. Defaults to `false`.
+- `collation`: (Optional) Specifies the collation rules for string comparisons during the update.
+- `arrayFilters`: (Optional) Allows you to specify filters to identify which elements in an array to update.
+- `hint`: (Optional) A document or a string specifying the index to use for the update.
+**Example:**
+```javascript
+db.products.updateOne({ name: "Monitor" }, { $set: { stock: 15 } })
+```
+**Example:**
+Suppose we have a MongoDB collection named "employees" with the following documents:
+```json
+{ "_id": 1, "name": "Alice", "age": 30, "department": "HR", "salary": 50000 }
+{ "_id": 2, "name": "Bob", "age": 35, "department": "IT", "salary": 60000 }
+{ "_id": 3, "name": "Charlie", "age": 28, "department": "Marketing", "salary": 45000 }
+```
+Now, let's use `updateMany()` to increase the salary of all employees in the "IT" department by 10%:
+```javascript
+// Filter to identify documents in the "IT" department
+const filter = { department: "IT" };
+// Update to increase the salary by 10%
+const update = { $mul: { salary: 1.1 } };
+// Perform the update operation on the "employees" collection
+const result = db.employees.updateMany(filter, update);
+// Output: The "salary" field of all employees in the "IT" department is increased by 10%.
+```
 ### remove()
 To delete documents that match a specific query:
 ```javascript
