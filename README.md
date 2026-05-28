@@ -1,154 +1,189 @@
 # MongoDB Cheat Sheet with Examples
 
-This README file provides a comprehensive guide to MongoDB commands and operations. MongoDB is a popular NoSQL database that stores data in a JSON-like format, making it easy to work with and flexible. This cheat sheet covers basic commands, database and collection creation, data insertion, querying, updates, deletions, and some advanced operations. Let's get started!
+This README file provides a comprehensive guide to MongoDB commands and operations. MongoDB is a popular NoSQL database that stores data in a JSON-like format, making it easy to work with and flexible.
 
+<img src="https://miro.medium.com/v2/resize:fit:512/1*doAg1_fMQKWFoub-6gwUiQ.png" alt="MongoDB Image" width="350px" height="350px"/>
 
-<img src="https://miro.medium.com/v2/resize:fit:512/1*doAg1_fMQKWFoub-6gwUiQ.png" alt="MongooDB Image" width="350px" height="350px"/>
-
+---
 
 ## Table of Contents
-1. [Basic Commands](#basic-commands)
-   - Show Databases
-   - Use Database
-   - Show Collections
 
-2. [Database Creation Commands](#database-creation-commands)
+1. [Terminal Connection (mongosh)](#terminal-connection-mongosh)
+2. [Basic Commands](#basic-commands)
+3. [Database Creation Commands](#database-creation-commands)
+4. [Collection Creation Commands](#collection-creation-commands)
+5. [Insertion Commands](#insertion-commands)
+6. [Query Commands](#query-commands)
+7. [Projection](#projection)
+8. [Query Operators](#query-operators)
+9. [Array Operators](#array-operators)
+10. [Update Commands](#update-commands)
+11. [Deletion Commands](#deletion-commands)
+12. [Extras (skip, sort, limit, count)](#extras)
+13. [Index Commands](#index-commands)
+14. [Aggregation](#aggregation)
+15. [Aggregation Expressions](#aggregation-expressions)
+16. [Aggregation Pipeline Stages](#aggregation-pipeline-stages)
+17. [Transactions (ACID)](#transactions-acid)
+18. [BulkWrite](#bulkwrite)
+19. [Database & Collection Utilities](#database--collection-utilities)
+20. [User Management](#user-management)
+21. [Regular Expressions](#regular-expressions)
 
-3. [Collection Creation Commands](#collection-creation-commands)
+---
 
-4. [Insertion Commands](#insertion-commands)
-   - insertOne()
-   - insertMany()
+## Terminal Connection (mongosh)
 
-5. [Query Commands](#query-commands)
-   - find()
-   - findOne()
+> `mongosh` is the modern MongoDB Shell (replaces old `mongo`). Install from [mongodb.com/try/download/shell](https://www.mongodb.com/try/download/shell)
 
-6. [Query Operators](#query-operators)
-   - Equality
-   - Less Than
-   - Less Than or Equal
-   - Greater Than or Equal
-   - Not Equal
-   - Values in an Array
-   - Values not in an Array
-   - AND
-   - OR
-   - AND and OR Together
-   - NOR
-   - NOT
+### Connect to localhost (default port 27017)
+```bash
+mongosh
+# or explicitly
+mongosh --host localhost --port 27017
+```
 
-7. [Update Commands](#update-commands)
-   - update()
-   - save()
-   - findOne and Update()
-   - updateOne()
-   - updateMany()
+### Connect to a specific database directly
+```bash
+mongosh --host localhost --port 27017 myDatabaseName
+```
 
-8. [Deletion Commands](#deletion-commands)
-   - deleteOne()
-   - deleteMany()
+### Connect with authentication
+```bash
+mongosh --host localhost --port 27017 -u myUser -p myPassword --authenticationDatabase admin
+```
 
-9. [Extras](#extras)
-   - skip()
-   - sort()
-   - createIndex()
-   - dropIndex()
-   - dropIndexes()
+### Connect using a connection string URI
+```bash
+# Local
+mongosh "mongodb://localhost:27017/myDatabase"
 
-10. [Aggregation](#aggregation)
-    - aggregation()
+# With credentials in URI
+mongosh "mongodb://username:password@localhost:27017/myDatabase"
 
-11. [Aggregation Expressions](#aggregation-expressions)
-    - sum
-    - avg
-    - min
-    - max
-    - push
-    - addToSet
-    - first
+# MongoDB Atlas (cloud) - SRV URI
+mongosh "mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/myDatabase"
 
-12. [Regular Expressions](#regular-expressions)
+# Atlas - password prompt (more secure)
+mongosh "mongodb+srv://username@cluster0.xxxxx.mongodb.net/myDatabase"
+# You'll be prompted for the password
+```
+
+### Connect with TLS/SSL
+```bash
+mongosh "mongodb+srv://username@cluster.mongodb.net/db" --tls
+```
+
+### Connect with replica set
+```bash
+mongosh "mongodb://host1:27017,host2:27017/myDB?replicaSet=myReplicaSet"
+```
+
+### Useful shell options
+```bash
+mongosh --quiet          # suppress startup banners
+mongosh --eval "db.stats()"   # run a single command and exit
+mongosh --version        # check mongosh version
+```
+
+### Exit the shell
+```bash
+exit
+# or
+quit()
+# or
+.exit
+```
+
+---
 
 ## Basic Commands
 
 ### Show Databases
-To display a list of all available databases:
 ```javascript
 show dbs
-```
-**Example:**
-```javascript
-show dbs
-```
-**Output:**
-```plaintext
-admin        0.000GB
-my_database  0.001GB
 ```
 
-### Use Database
-To switch to a specific database or create it if it doesn't exist:
+### Use / Switch Database
 ```javascript
-use <database_name>
+use myDatabase
 ```
-**Example:**
+
+### Show current database
 ```javascript
-use my_database
+db
 ```
 
 ### Show Collections
-To view all collections within the current database:
 ```javascript
 show collections
 ```
-**Example:**
+
+### Show current user
 ```javascript
-show collections
+db.getUser()
 ```
-**Output:**
-```plaintext
-users
-products
+
+### Show all users in current DB
+```javascript
+show users
 ```
+
+### Show all roles
+```javascript
+show roles
+```
+
+### Drop a database
+```javascript
+db.dropDatabase()
+```
+
+---
 
 ## Database Creation Commands
 
-MongoDB creates databases and collections automatically when data is inserted. To create a new database, simply start inserting data into it using the `insertOne()` or `insertMany()` commands.
+MongoDB creates databases automatically when data is inserted. Just `use <name>` and insert a document.
+
+---
 
 ## Collection Creation Commands
 
-Collections are created automatically when data is inserted. You can also create a collection explicitly using the `createCollection()` method:
-```javascript
-db.createCollection("<collection_name>")
-```
-**Example:**
+### Auto-created on insert
+Collections are created automatically when you insert data.
+
+### Explicit creation
 ```javascript
 db.createCollection("products")
+
+// With options (capped collection - fixed size)
+db.createCollection("logs", {
+  capped: true,
+  size: 10485760,  // 10MB max size
+  max: 5000        // max 5000 documents
+})
 ```
+
+### Drop a collection
+```javascript
+db.products.drop()
+```
+
+### Rename a collection
+```javascript
+db.products.renameCollection("items")
+```
+
+---
 
 ## Insertion Commands
 
 ### insertOne()
-To insert a single document into a collection:
-```javascript
-db.<collection_name>.insertOne({ key1: value1, key2: value2, ... })
-```
-**Example:**
 ```javascript
 db.products.insertOne({ name: "Laptop", price: 999.99, stock: 10 })
 ```
 
 ### insertMany()
-To insert multiple documents into a collection in a single operation:
-```javascript
-db.<collection_name>.insertMany([
-  { key1: value1, key2: value2, ... },
-  { key1: value3, key2: value4, ... },
-  ...
-])
-```
-**Example:**
 ```javascript
 db.products.insertMany([
   { name: "Keyboard", price: 49.99, stock: 50 },
@@ -157,412 +192,710 @@ db.products.insertMany([
 ])
 ```
 
+---
+
 ## Query Commands
 
-### find()
-To retrieve documents from a collection that match a specific query criteria:
+### find() — Get all or filtered documents
 ```javascript
-db.<collection_name>.find({ key: value })
-```
-**Example:**
-```javascript
+db.products.find()
+db.products.find().pretty()  // pretty print
 db.products.find({ price: { $lt: 100 } })
 ```
-To show all the documents in collection at once with pretty() method which is used to prettify documents
-```javascript
-db.products.find().pretty()
-```
-### findOne()
-To retrieve a single document that matches a specific query criteria:
-```javascript
-db.<collection_name>.findOne({ key: value })
-```
-**Example:**
+
+### findOne() — Get first matching document
 ```javascript
 db.products.findOne({ name: "Laptop" })
 ```
 
+### count() / countDocuments()
+```javascript
+db.products.countDocuments()
+db.products.countDocuments({ category: "Electronics" })
+// Deprecated but still seen:
+db.products.count({ category: "Electronics" })
+```
+
+### distinct() — Unique values of a field
+```javascript
+db.products.distinct("category")
+```
+
+---
+
+## Projection
+
+Control which fields are returned (like `SELECT col1, col2` in SQL).
+
+```javascript
+// Syntax: find(filter, projection)
+// 1 = include, 0 = exclude
+
+// Include only name and price (always returns _id unless excluded)
+db.products.find({}, { name: 1, price: 1 })
+
+// Exclude _id
+db.products.find({}, { name: 1, price: 1, _id: 0 })
+
+// Exclude a specific field
+db.products.find({}, { stock: 0 })
+```
+
+> **Note:** You can't mix include and exclude in the same projection (except `_id`).
+
+---
+
 ## Query Operators
 
-### Equality
-```javascript
-db.<collection_name>.find({ key: value })
-```
-**Example:**
-```javascript
-db.products.find({ category: "Electronics" })
-```
+### Comparison Operators
 
-### Less Than
-```javascript
-db.<collection_name>.find({ key: { $lt: value } })
-```
-**Example:**
+| Operator | Meaning       |
+|----------|--------------|
+| `$eq`    | Equal        |
+| `$ne`    | Not equal    |
+| `$lt`    | Less than    |
+| `$lte`   | Less than or equal |
+| `$gt`    | Greater than |
+| `$gte`   | Greater than or equal |
+| `$in`    | In array     |
+| `$nin`   | Not in array |
+
 ```javascript
 db.products.find({ price: { $lt: 1000 } })
-```
-
-### Less Than or Equal
-```javascript
-db.<collection_name>.find({ key: { $lte: value } })
-```
-**Example:**
-```javascript
-db.products.find({ price: { $lte: 1000 } })
-```
-
-### Greater Than or Equal
-```javascript
-db.<collection_name>.find({ key: { $gte: value } })
-```
-**Example:**
-```javascript
 db.products.find({ price: { $gte: 500 } })
-```
-
-### Not Equal
-```javascript
-db.<collection_name>.find({ key: { $ne: value } })
-```
-**Example:**
-```javascript
 db.products.find({ category: { $ne: "Clothing" } })
-```
-
-### Values in an Array
-```javascript
-db.<collection_name>.find({ key: { $in: [value1, value2, ...] } })
-```
-**Example:**
-```javascript
 db.products.find({ color: { $in: ["Black", "White"] } })
-```
-
-### Values not in an Array
-```javascript
-db.<collection_name>.find({ key: { $nin: [value1, value2, ...] } })
-```
-**Example:**
-```javascript
 db.products.find({ color: { $nin: ["Red", "Blue"] } })
 ```
 
-### AND
-```javascript
-db.<collection_name>.find({ $and: [ { key1: value1 }, { key2: value2 }, ... ] })
-```
-**Example:**
-```javascript
-db.products.find({ $and: [ { category: "Electronics" }, { price: { $lt: 1000 } } ] })
+### Logical Operators
 
+```javascript
+// AND
+db.products.find({ $and: [{ category: "Electronics" }, { price: { $lt: 1000 } }] })
 
-```
+// OR
+db.products.find({ $or: [{ category: "Electronics" }, { category: "Clothing" }] })
 
-### OR
-```javascript
-db.<collection_name>.find({ $or: [ { key1: value1 }, { key2: value2 }, ... ] })
-```
-**Example:**
-```javascript
-db.products.find({ $or: [ { category: "Electronics" }, { category: "Clothing" } ] })
-```
+// NOR
+db.products.find({ $nor: [{ category: "Electronics" }, { category: "Clothing" }] })
 
-### AND and OR Together
-```javascript
-db.<collection_name>.find({ $and: [ { key1: value1 }, { $or: [ { key2: value2 }, { key3: value3 } ] } ] })
-```
-**Example:**
-```javascript
-db.products.find({ $and: [ { category: "Electronics" }, { $or: [ { price: { $lt: 500 } }, { stock: { $gte: 50 } } ] } ] })
-```
-
-### NOR
-```javascript
-db.<collection_name>.find({ $nor: [ { key1: value1 }, { key2: value2 }, ... ] })
-```
-**Example:**
-```javascript
-db.products.find({ $nor: [ { category: "Electronics" }, { category: "Clothing" } ] })
-```
-
-### NOT
-```javascript
-db.<collection_name>.find({ key: { $not: { <operator_expression> } } })
-```
-**Example:**
-```javascript
+// NOT
 db.products.find({ price: { $not: { $lt: 500 } } })
+
+// AND + OR combined
+db.products.find({
+  $and: [
+    { category: "Electronics" },
+    { $or: [{ price: { $lt: 500 } }, { stock: { $gte: 50 } }] }
+  ]
+})
 ```
+
+### Element Operators
+
+```javascript
+// Check if field exists
+db.products.find({ discount: { $exists: true } })
+db.products.find({ discount: { $exists: false } })
+
+// Check field type
+db.products.find({ price: { $type: "double" } })
+db.products.find({ name: { $type: "string" } })
+```
+
+---
+
+## Array Operators
+
+### Query inside arrays
+
+```javascript
+// Match documents where tags array contains "electronics"
+db.products.find({ tags: "electronics" })
+
+// $all — must contain ALL values
+db.products.find({ tags: { $all: ["electronics", "wireless"] } })
+
+// $size — array length equals N
+db.products.find({ tags: { $size: 3 } })
+
+// $elemMatch — at least one element matches all conditions
+db.products.find({ ratings: { $elemMatch: { $gte: 4, $lt: 5 } } })
+```
+
+### Update arrays
+
+```javascript
+// $push — add element to array
+db.products.updateOne({ _id: 1 }, { $push: { colors: "Silver" } })
+
+// $push with $each — add multiple elements
+db.products.updateOne({ _id: 1 }, { $push: { colors: { $each: ["Gold", "Rose Gold"] } } })
+
+// $addToSet — add only if not already present (no duplicates)
+db.products.updateOne({ _id: 1 }, { $addToSet: { colors: "Silver" } })
+
+// $pull — remove specific element(s)
+db.products.updateOne({ _id: 1 }, { $pull: { tags: "outdated" } })
+
+// $pop — remove first (-1) or last (1) element
+db.products.updateOne({ _id: 1 }, { $pop: { tags: 1 } })   // remove last
+db.products.updateOne({ _id: 1 }, { $pop: { tags: -1 } })  // remove first
+```
+
+---
 
 ## Update Commands
 
-### update()
-To update documents that match a specific query with new values:
-```javascript
-db.<collection_name>.update({ key: value }, { $set: { new_key: new_value } })
-```
-**Example:**
-```javascript
-db.products.update({ name: "Laptop" }, { $set: { price: 899.99 } })
-```
-
-### save()
-To update an existing document or insert a new one if it does not exist:
-```javascript
-db.<collection_name>.save({ _id: existing_id, key: new_value, ... })
-```
-**Example:**
-```javascript
-db.products.save({ _id: 1, name: "Keyboard", price: 39.99, stock: 50 })
-```
-
-### findOne and Update()
-To update the first document that matches the query:
-```javascript
-db.<collection_name>.findOneAndUpdate({ key: value }, { $set: { new_key: new_value } })
-```
-**Example:**
-```javascript
-db.products.findOneAndUpdate({ name: "Mouse" }, { $set: { price: 24.99 } })
-```
-
 ### updateOne()
-To update the first document that matches the query with new values:
-```javascript
-db.<collection_name>.updateOne({ key: value }, { $set: { new_key: new_value } })
-```
-**Example:**
 ```javascript
 db.products.updateOne({ name: "Monitor" }, { $set: { stock: 15 } })
 ```
 
 ### updateMany()
-`updateMany()` is a MongoDB method used to update multiple documents that match a specified filter in a collection. It allows you to make changes to multiple records in a single database operation, which can be more efficient than updating each document individually.
-The syntax for `updateMany()` in MongoDB is as follows:
 ```javascript
-db.<collection_name>.updateMany({ key: value }, { $set: { new_key: new_value } })
+db.products.updateMany({ category: "Electronics" }, { $set: { onSale: true } })
+
+// Multiply a field ($mul)
+db.employees.updateMany({ department: "IT" }, { $mul: { salary: 1.1 } })
+
+// Increment a field ($inc)
+db.products.updateMany({ category: "Electronics" }, { $inc: { stock: -1 } })
+
+// Remove a field ($unset)
+db.products.updateMany({}, { $unset: { oldField: "" } })
+
+// Rename a field ($rename)
+db.products.updateMany({}, { $rename: { "oldName": "newName" } })
 ```
-**Advance Syntax:**
+
+### replaceOne() — Replace entire document
 ```javascript
-db.collection.updateMany(
-   <filter>,
-   <update>,
-   {
-      upsert: <boolean>,
-      collation: <document>,
-      arrayFilters: [ <filterdocument1>, ... ],
-      hint: <document|string>
-   }
+// WARNING: This replaces the ENTIRE document (except _id)
+db.products.replaceOne(
+  { name: "Keyboard" },
+  { name: "Keyboard Pro", price: 59.99, stock: 40 }
 )
 ```
-**Parameters:**
-- `collection`: The name of the collection where the documents will be updated.
-- `<filter>`: A document that specifies the selection criteria to identify the documents to be updated.
-- `<update>`: A document that contains the modifications to be applied to the matching documents.
-- `upsert`: (Optional) If set to `true`, creates a new document if no documents match the filter. Defaults to `false`.
-- `collation`: (Optional) Specifies the collation rules for string comparisons during the update.
-- `arrayFilters`: (Optional) Allows you to specify filters to identify which elements in an array to update.
-- `hint`: (Optional) A document or a string specifying the index to use for the update.
-**Example:**
+
+### findOneAndUpdate() — Atomic find + update, returns document
 ```javascript
-db.products.updateOne({ name: "Monitor" }, { $set: { stock: 15 } })
+// Returns document BEFORE update (default)
+db.products.findOneAndUpdate(
+  { name: "Mouse" },
+  { $set: { price: 24.99 } }
+)
+
+// Return document AFTER update
+db.products.findOneAndUpdate(
+  { name: "Mouse" },
+  { $set: { price: 24.99 } },
+  { returnDocument: "after" }
+)
 ```
-**Example:**
-Suppose we have a MongoDB collection named "employees" with the following documents:
-```json
-{ "_id": 1, "name": "Alice", "age": 30, "department": "HR", "salary": 50000 }
-{ "_id": 2, "name": "Bob", "age": 35, "department": "IT", "salary": 60000 }
-{ "_id": 3, "name": "Charlie", "age": 28, "department": "Marketing", "salary": 45000 }
-```
-Now, let's use `updateMany()` to increase the salary of all employees in the "IT" department by 10%:
+
+### findOneAndReplace()
 ```javascript
-// Filter to identify documents in the "IT" department
-const filter = { department: "IT" };
-// Update to increase the salary by 10%
-const update = { $mul: { salary: 1.1 } };
-// Perform the update operation on the "employees" collection
-const result = db.employees.updateMany(filter, update);
-// Output: The "salary" field of all employees in the "IT" department is increased by 10%.
+db.products.findOneAndReplace(
+  { name: "Mouse" },
+  { name: "Mouse Pro", price: 39.99 },
+  { returnDocument: "after" }
+)
 ```
+
+### findOneAndDelete() — Atomic find + delete (useful for job queues)
+```javascript
+db.jobs.findOneAndDelete({ status: "pending" })
+```
+
+### Upsert — Insert if not found, update if found
+```javascript
+db.products.updateOne(
+  { name: "Trackpad" },
+  { $set: { price: 79.99, stock: 25 } },
+  { upsert: true }
+)
+```
+
+### $setOnInsert — Only set fields on new insert (not on update)
+```javascript
+db.products.updateOne(
+  { name: "Headphones" },
+  {
+    $set: { price: 199 },
+    $setOnInsert: { createdAt: new Date() }
+  },
+  { upsert: true }
+)
+```
+
+---
 
 ## Deletion Commands
 
 ### deleteOne()
-To delete a single document that matches a specific query:
-```javascript
-db.<collection_name>.deleteOne({ key: value })
-```
-**Example:**
 ```javascript
 db.products.deleteOne({ stock: { $lt: 10 } })
 ```
 
 ### deleteMany()
-To delete all documents that match a specific query:
-```javascript
-db.<collection_name>.deleteMany({ key: value })
-```
-**Example:**
 ```javascript
 db.products.deleteMany({ category: "Electronics" })
+
+// Delete all documents in a collection (keeps the collection)
+db.products.deleteMany({})
 ```
+
+---
 
 ## Extras
 
 ### skip()
-To skip a specified number of documents in a collection and return the rest:
-```javascript
-db.<collection_name>.find().skip(number_of_documents_to_skip)
-```
-**Example:**
 ```javascript
 db.products.find().skip(5)
 ```
 
+### limit()
+```javascript
+db.products.find().limit(10)
+```
+
 ### sort()
-To sort the documents in a collection based on a specific field:
 ```javascript
-db.<collection_name>.find().sort({ field: 1 })  // 1 for ascending, -1 for descending
+db.products.find().sort({ price: -1 })  // descending
+db.products.find().sort({ price: 1 })   // ascending
+db.products.find().sort({ category: 1, price: -1 })  // multi-field sort
 ```
-**Example:**
+
+### Pagination pattern (skip + limit)
 ```javascript
-db.products.find().sort({ price: -1 })  // Sort by price in descending order
+// Page 1
+db.products.find().sort({ _id: 1 }).skip(0).limit(10)
+// Page 2
+db.products.find().sort({ _id: 1 }).skip(10).limit(10)
+
+// ⚠️ Avoid skip() on large collections — use cursor-based pagination instead
+// Cursor-based (faster for large datasets)
+db.products.find({ _id: { $gt: lastSeenId } }).sort({ _id: 1 }).limit(10)
 ```
+
+---
+
+## Index Commands
 
 ### createIndex()
-To create an index on a specific field in a collection for faster querying:
 ```javascript
-db.<collection_name>.createIndex({ field: 1 })  // 1 for ascending, -1 for descending
-```
-**Example:**
-```javascript
-db.products.createIndex({ name: 1 })  // Create an index on the "name" field
-``
+// Single field index
+db.products.createIndex({ name: 1 })   // ascending
+db.products.createIndex({ price: -1 }) // descending
 
-`
+// Compound index
+db.products.createIndex({ category: 1, price: -1 })
+
+// Unique index
+db.products.createIndex({ email: 1 }, { unique: true })
+
+// Sparse index (only indexes docs where field exists)
+db.products.createIndex({ discount: 1 }, { sparse: true })
+
+// TTL index (auto-delete after N seconds)
+db.sessions.createIndex({ createdAt: 1 }, { expireAfterSeconds: 3600 })
+
+// Text index (full-text search)
+db.articles.createIndex({ content: "text" })
+db.articles.find({ $text: { $search: "mongodb tutorial" } })
+```
+
+### listIndexes()
+```javascript
+db.products.getIndexes()
+```
 
 ### dropIndex()
-To remove a specific index from a collection:
 ```javascript
-db.<collection_name>.dropIndex({ field: 1 })  // 1 for ascending, -1 for descending
-```
-**Example:**
-```javascript
-db.products.dropIndex({ name: 1 })  // Remove the index on the "name" field
+db.products.dropIndex({ name: 1 })
+db.products.dropIndex("name_1")  // by index name
 ```
 
 ### dropIndexes()
-To remove all indexes from a collection:
 ```javascript
-db.<collection_name>.dropIndexes()
+db.products.dropIndexes()  // drops all indexes except _id
 ```
-**Example:**
-```javascript
-db.products.dropIndexes()
-```
+
+---
 
 ## Aggregation
 
-### aggregation()
-To perform aggregation operations on a collection:
-```javascript
-db.<collection_name>.aggregate([ { <aggregation_stage> }, { <aggregation_stage> }, ... ])
-```
-**Example:**
+The aggregation pipeline processes documents through a sequence of stages.
+
 ```javascript
 db.products.aggregate([
-  { $group: { _id: "$category", total: { $sum: "$price" } } },
+  { $match: { category: "Electronics" } },
+  { $group: { _id: "$brand", total: { $sum: "$price" } } },
   { $sort: { total: -1 } }
 ])
 ```
 
+---
+
 ## Aggregation Expressions
 
-### sum
-To calculate the sum of a field in a collection:
+| Expression  | Description                        |
+|-------------|------------------------------------|
+| `$sum`      | Sum of values                      |
+| `$avg`      | Average of values                  |
+| `$min`      | Minimum value                      |
+| `$max`      | Maximum value                      |
+| `$count`    | Count documents                    |
+| `$push`     | Add values to array                |
+| `$addToSet` | Add unique values to array         |
+| `$first`    | First value in group               |
+| `$last`     | Last value in group                |
+
 ```javascript
-db.<collection_name>.aggregate([ { $group: { _id: null, total: { $sum: "$field" } } } ])
-```
-**Example:**
-```javascript
-db.products.aggregate([ { $group: { _id: null, total: { $sum: "$price" } } } ])
+// Sum
+db.products.aggregate([{ $group: { _id: null, total: { $sum: "$price" } } }])
+
+// Avg
+db.products.aggregate([{ $group: { _id: null, average: { $avg: "$price" } } }])
+
+// Min / Max
+db.products.aggregate([{ $group: { _id: null, minPrice: { $min: "$price" }, maxPrice: { $max: "$price" } } }])
+
+// push — collect all values into array
+db.products.aggregate([{ $group: { _id: "$category", allPrices: { $push: "$price" } } }])
+
+// addToSet — unique values only
+db.products.aggregate([{ $group: { _id: "$category", brands: { $addToSet: "$brand" } } }])
+
+// first / last
+db.products.aggregate([
+  { $sort: { price: 1 } },
+  { $group: { _id: "$category", cheapest: { $first: "$name" } } }
+])
 ```
 
-### avg
-To calculate the average of a field in a collection:
+---
+
+## Aggregation Pipeline Stages
+
+### $match — Filter documents (like find)
 ```javascript
-db.<collection_name>.aggregate([ { $group: { _id: null, average: { $avg: "$field" } } } ])
-```
-**Example:**
-```javascript
-db.products.aggregate([ { $group: { _id: null, average: { $avg: "$price" } } } ])
+{ $match: { status: "active", price: { $gt: 100 } } }
 ```
 
-### min
-To find the minimum value of a field in a collection:
+### $project — Reshape documents (include/exclude/compute fields)
 ```javascript
-db.<collection_name>.aggregate([ { $group: { _id: null, min: { $min: "$field" } } } ])
-```
-**Example:**
-```javascript
-db.products.aggregate([ { $group: { _id: null, min: { $min: "$price" } } } ])
-```
-
-### max
-To find the maximum value of a field in a collection:
-```javascript
-db.<collection_name>.aggregate([ { $group: { _id: null, max: { $max: "$field" } } } ])
-```
-**Example:**
-```javascript
-db.products.aggregate([ { $group: { _id: null, max: { $max: "$price" } } } ])
+{
+  $project: {
+    name: 1,
+    price: 1,
+    _id: 0,
+    discountedPrice: { $multiply: ["$price", 0.9] }
+  }
+}
 ```
 
-### push
-To add elements to an array field in a collection:
+### $group — Group by field and aggregate
 ```javascript
-db.<collection_name>.update({ _id: document_id }, { $push: { field: new_element } })
-```
-**Example:**
-```javascript
-db.products.update({ _id: 1 }, { $push: { colors: "Silver" } })
-```
-
-### addToSet
-To add elements to an array field only if they don't already exist in a collection:
-```javascript
-db.<collection_name>.update({ _id: document_id }, { $addToSet: { field: new_element } })
-```
-**Example:**
-```javascript
-db.products.update({ _id: 1 }, { $addToSet: { colors: "Silver" } })
+{
+  $group: {
+    _id: "$category",
+    total: { $sum: "$price" },
+    count: { $sum: 1 }
+  }
+}
 ```
 
-### first
-To get the first document from a collection:
+### $sort — Sort results
 ```javascript
-db.<collection_name>.find().limit(1)
+{ $sort: { total: -1 } }
 ```
-**Example:**
+
+### $limit / $skip — Paginate results
 ```javascript
-db.products.find().limit(1)
+{ $limit: 10 }
+{ $skip: 20 }
 ```
+
+### $lookup — LEFT OUTER JOIN with another collection
+```javascript
+{
+  $lookup: {
+    from: "orders",          // collection to join
+    localField: "_id",       // field from current collection
+    foreignField: "userId",  // field from joined collection
+    as: "userOrders"         // output array field name
+  }
+}
+```
+
+**Full example:**
+```javascript
+db.users.aggregate([
+  {
+    $lookup: {
+      from: "orders",
+      localField: "_id",
+      foreignField: "userId",
+      as: "orders"
+    }
+  },
+  { $match: { "orders.0": { $exists: true } } }  // users who have at least 1 order
+])
+```
+
+### $unwind — Deconstruct an array field (one doc per array element)
+```javascript
+{ $unwind: "$tags" }
+
+// Preserve docs with empty/missing arrays
+{ $unwind: { path: "$tags", preserveNullAndEmptyArrays: true } }
+```
+
+### $addFields — Add computed fields without removing existing ones
+```javascript
+{
+  $addFields: {
+    totalValue: { $multiply: ["$price", "$stock"] },
+    updatedAt: new Date()
+  }
+}
+```
+
+### $count — Count documents passing through
+```javascript
+{ $count: "totalProducts" }
+```
+
+### $out — Write pipeline result to a new collection
+```javascript
+{ $out: "product_summary" }
+```
+
+### $facet — Run multiple sub-pipelines in parallel
+```javascript
+{
+  $facet: {
+    byCategory: [{ $group: { _id: "$category", count: { $sum: 1 } } }],
+    priceStats: [{ $group: { _id: null, avg: { $avg: "$price" } } }]
+  }
+}
+```
+
+---
+
+## Transactions (ACID)
+
+Multi-document ACID transactions — available from MongoDB 4.0+. Required for operations spanning multiple collections or documents that must be atomic.
+
+```javascript
+// Using mongosh
+const session = db.getMongo().startSession()
+session.startTransaction()
+
+try {
+  const accounts = session.getDatabase("bank").accounts
+
+  accounts.updateOne(
+    { name: "Alice" },
+    { $inc: { balance: -500 } }
+  )
+
+  accounts.updateOne(
+    { name: "Bob" },
+    { $inc: { balance: 500 } }
+  )
+
+  session.commitTransaction()
+  print("Transaction committed!")
+} catch (err) {
+  session.abortTransaction()
+  print("Transaction aborted:", err)
+} finally {
+  session.endSession()
+}
+```
+
+> **Note:** Transactions require a replica set or sharded cluster. They don't work on standalone mongod instances.
+
+---
+
+## BulkWrite
+
+Perform multiple write operations in a single network round-trip.
+
+```javascript
+db.products.bulkWrite([
+  {
+    insertOne: {
+      document: { name: "USB Hub", price: 29.99, stock: 75 }
+    }
+  },
+  {
+    updateOne: {
+      filter: { name: "Keyboard" },
+      update: { $set: { price: 44.99 } }
+    }
+  },
+  {
+    updateMany: {
+      filter: { category: "Electronics" },
+      update: { $inc: { stock: -1 } }
+    }
+  },
+  {
+    replaceOne: {
+      filter: { name: "Mouse" },
+      replacement: { name: "Mouse Pro", price: 34.99, stock: 60 }
+    }
+  },
+  {
+    deleteOne: {
+      filter: { stock: 0 }
+    }
+  },
+  {
+    deleteMany: {
+      filter: { discontinued: true }
+    }
+  }
+])
+```
+
+> By default, `bulkWrite()` is **ordered** (stops on first error). Pass `{ ordered: false }` to continue on errors.
+
+```javascript
+db.products.bulkWrite([...operations], { ordered: false })
+```
+
+---
+
+## Database & Collection Utilities
+
+### Database stats
+```javascript
+db.stats()
+db.serverStatus()
+```
+
+### Collection stats
+```javascript
+db.products.stats()
+db.products.totalSize()
+db.products.totalIndexSize()
+db.products.dataSize()
+```
+
+### Validate a collection
+```javascript
+db.products.validate()
+```
+
+### List all collections with details
+```javascript
+db.getCollectionInfos()
+```
+
+### Copy a database (mongosh)
+```javascript
+// Use mongodump/mongorestore for production — in-shell copy is removed in newer versions
+```
+
+---
+
+## User Management
+
+### Create a user
+```javascript
+db.createUser({
+  user: "appUser",
+  pwd: "securePassword123",
+  roles: [
+    { role: "readWrite", db: "myDatabase" },
+    { role: "read", db: "reporting" }
+  ]
+})
+```
+
+### Show users
+```javascript
+show users
+db.getUsers()
+```
+
+### Update user password
+```javascript
+db.changeUserPassword("appUser", "newPassword456")
+```
+
+### Grant additional roles
+```javascript
+db.grantRolesToUser("appUser", [{ role: "dbAdmin", db: "myDatabase" }])
+```
+
+### Revoke roles
+```javascript
+db.revokeRolesFromUser("appUser", [{ role: "dbAdmin", db: "myDatabase" }])
+```
+
+### Drop a user
+```javascript
+db.dropUser("appUser")
+```
+
+### Built-in roles reference
+
+| Role          | Access                              |
+|---------------|-------------------------------------|
+| `read`        | Read-only                           |
+| `readWrite`   | Read + write                        |
+| `dbAdmin`     | Schema/index admin, no data access  |
+| `userAdmin`   | Manage users/roles                  |
+| `dbOwner`     | All of the above combined           |
+| `readAnyDatabase` | Read all databases (admin only) |
+| `root`        | Full superuser access               |
+
+---
 
 ## Regular Expressions
 
-MongoDB supports regular expressions for pattern matching in queries. You can use the `$regex` operator to perform regular expression queries.
-
 ```javascript
-db.<collection_name>.find({ field: { $regex: /pattern/ } })
-```
-**Example:**
-```javascript
+// Basic regex
 db.products.find({ name: { $regex: /^Laptop/ } })
+
+// Case-insensitive
+db.products.find({ name: { $regex: /laptop/i } })
+
+// Contains substring
+db.products.find({ name: { $regex: /pro/i } })
+
+// String form
+db.products.find({ name: { $regex: "^Laptop", $options: "i" } })
 ```
 
-# Conclusion
-In conclusion, this MongoDB cheat sheet provides a comprehensive guide to essential commands and operations for efficiently working with MongoDB databases. It covers basic commands for managing databases and collections, as well as querying techniques to retrieve specific data. Additionally, it introduces aggregation for complex data processing and analysis. You also learned about updating and deleting data, using query operators and regular expressions for precise filtering, and optimizing query performance with indexes.
-While this cheat sheet covers a wide range of topics, there are still more advanced features to explore in MongoDB. By continuously practicing and referring to the official documentation, you can enhance your MongoDB skills and unlock exciting possibilities for building powerful applications. Happy coding with MongoDB!
+---
+
+## Quick Reference: Update Operators
+
+| Operator      | Description                              |
+|---------------|------------------------------------------|
+| `$set`        | Set a field value                        |
+| `$unset`      | Remove a field                           |
+| `$inc`        | Increment a numeric field                |
+| `$mul`        | Multiply a numeric field                 |
+| `$rename`     | Rename a field                           |
+| `$min`        | Update if new value is less than current |
+| `$max`        | Update if new value is greater           |
+| `$currentDate`| Set field to current date                |
+| `$push`       | Add element to array                     |
+| `$pull`       | Remove elements from array               |
+| `$addToSet`   | Add to array (unique only)               |
+| `$pop`        | Remove first/last array element          |
+| `$setOnInsert`| Set only on upsert insert                |
+
+---
 
 ## License
 
